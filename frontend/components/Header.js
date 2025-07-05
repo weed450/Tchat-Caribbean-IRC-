@@ -10,3 +10,6 @@ export default function Header() {
     </nav>
   );
 }
+<header className="bg-blue-700 p-4 text-center text-2xl font-bold">
+  {`Salon #${room} | Bienvenue ${pseudo}`}
+</header>
