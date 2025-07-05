@@ -45,9 +45,27 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('✅ Utilisateur connecté via Socket.io');
 
-  socket.on('message', (msg) => {
-    io.emit('message', msg);
-  });
+ socket.on('message', async (msg) => {
+  const { author, content } = msg;
+
+  try {
+    const user = await User.findOne({ pseudo: author });
+
+    const fullMessage = {
+      author,
+      content,
+      badge: user?.badge?.verified ? {
+        verified: true,
+        color: user.badge.color,
+        symbol: user.badge.symbol
+      } : null
+    };
+
+    io.emit('message', fullMessage);
+  } catch (err) {
+    console.error('Erreur lors de l’envoi du message avec badge :', err);
+  }
+});
 
   socket.on('disconnect', () => {
     console.log('❌ Utilisateur déconnecté');
