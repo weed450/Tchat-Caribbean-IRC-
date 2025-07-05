@@ -61,21 +61,14 @@ export default function ChatPage() {
       <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
         Bienvenue {pseudo}
       </header>
-
-      <main className="flex-1 p-4 overflow-y-auto space-y-2">
-        {messages.map((msg, idx) => (
-          <div key={idx} className="bg-gray-800 p-2 rounded">
-            <strong className="text-white">
-              {msg.author}
-              {renderBadge(msg.badge)}
-              :
-            </strong>{" "}
-            {msg.content}
-          </div>
-        ))}
-      </main>
-
-      <form onSubmit={handleSend} className="p-4 flex bg-gray-800">
+import BadgeLegend from '../components/BadgeLegend';
+// ...
+<main className="flex-1 p-4 overflow-y-auto space-y-2">
+  <BadgeLegend />
+  {messages.map(...)}
+</main>
+    
+<form onSubmit={handleSend} className="p-4 flex bg-gray-800">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
