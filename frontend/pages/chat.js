@@ -14,8 +14,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!pseudo) return;
 
-    socket = io('http://localhost:3001'); // 🔁 adapte le port backend ici
-
+    socket = io('http://localhost:5000'); // 🔁 adapte à ton port backend
     socket.emit('join', { pseudo });
 
     socket.on('message', (msg) => {
@@ -29,33 +28,49 @@ export default function ChatPage() {
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (input.trim() === '') return;
+    if (!input.trim()) return;
 
     const messageData = { author: pseudo, content: input };
     socket.emit('message', messageData);
     setInput('');
   };
 
+  const renderBadge = (badge) => {
+    if (!badge?.verified) return null;
+
+    const badgeColors = {
+      gold: 'text-yellow-400',
+      blue: 'text-blue-400',
+      green: 'text-green-400',
+      pink: 'text-pink-400',
+      red: 'text-red-500',
+      black: 'text-gray-800',
+    };
+
+    const colorClass = badgeColors[badge.color] || 'text-white';
+
+    return (
+      <span className={`ml-1 font-bold ${colorClass}`}>
+        {badge.symbol}
+      </span>
+    );
+  };
+
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">
-      <header className="p-4 bg-blue-700 text-center text-2xl font-bold">
+      <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
         Bienvenue {pseudo}
       </header>
 
       <main className="flex-1 p-4 overflow-y-auto space-y-2">
         {messages.map((msg, idx) => (
           <div key={idx} className="bg-gray-800 p-2 rounded">
-            <strong className="inline-flex items-center gap-1">
-  <span>{msg.author}</span>
-  {msg.badge?.verified && (
-    <span
-      className={`text-${msg.badge.color}-500 font-bold`}
-      title="Vérifié"
-    >
-      {msg.badge.symbol}
-    </span>
-  )}
-</strong>: {msg.content}
+            <strong className="text-white">
+              {msg.author}
+              {renderBadge(msg.badge)}
+              :
+            </strong>{" "}
+            {msg.content}
           </div>
         ))}
       </main>
@@ -64,7 +79,7 @@ export default function ChatPage() {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-1 p-2 rounded bg-gray-700"
+          className="flex-1 p-2 rounded bg-gray-700 text-white"
           placeholder="Message"
         />
         <button
