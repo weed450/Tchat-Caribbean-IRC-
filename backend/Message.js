@@ -28,3 +28,8 @@ const messageSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Message', messageSchema);
+badge: {
+  verified: Boolean,
+  color: String,
+  symbol: String,
+},
