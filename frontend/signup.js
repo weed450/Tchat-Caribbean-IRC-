@@ -1,1 +1,0 @@
-// Page d’inscription avec logo
