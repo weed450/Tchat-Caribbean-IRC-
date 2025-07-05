@@ -94,3 +94,15 @@ export default function ChatPage() {
     </div>
   );
 }
+useEffect(() => {
+  if (!pseudo) return;
+
+  socket = io('http://localhost:5000');
+  socket.emit('registerPseudo', pseudo); // 👈 nouveau
+
+  socket.on('users', (list) => {
+    console.log('Utilisateurs connectés :', list); // Plus tard, tu peux afficher
+  });
+
+  ...
+}, [pseudo]);
