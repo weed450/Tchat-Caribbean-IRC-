@@ -50,3 +50,50 @@ router.post('/login', async (req, res) => {
 });
 
 module.exports = router;
+// middleware/isAdmin.js
+module.exports = function (req, res, next) {
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'owner')) {
+    return res.status(403).json({ error: 'Accès refusé' });
+  }
+  next();
+};
+const express = require('express');
+const router = express.Router();
+const User = require('../models/User');
+const isAdmin = require('../middleware/isAdmin');
+
+// POST /admin/badge
+router.post('/badge', isAdmin, async (req, res) => {
+  const { pseudo, color } = req.body;
+
+  const badgeConfig = {
+    gold: '@',
+    green: '@',
+    blue: '+',
+    pink: '✓',
+    red: '@',
+    black: '✓',
+  };
+
+  if (!badgeConfig[color]) {
+    return res.status(400).json({ error: 'Couleur invalide' });
+  }
+
+  try {
+    const user = await User.findOne({ pseudo });
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+    user.badge = {
+      verified: true,
+      color,
+      symbol: badgeConfig[color],
+    };
+
+    await user.save();
+    res.json({ message: 'Badge assigné avec succès', user });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+module.exports = router;
