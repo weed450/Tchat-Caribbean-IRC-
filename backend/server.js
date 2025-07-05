@@ -1,12 +1,3 @@
-const mongoose = require('mongoose');
-require('dotenv').config();
-
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connecté à MongoDB'))
-.catch((err) => console.error('❌ Erreur MongoDB :', err));
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
@@ -23,9 +14,10 @@ const io = new Server(server, {
 
 app.use(express.json());
 
+// Connexion MongoDB (1 seule fois)
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true,
+  useUnifiedTopology: true
 })
 .then(() => console.log('✅ Connecté à MongoDB'))
 .catch((err) => console.error('❌ Erreur MongoDB :', err));
@@ -36,39 +28,39 @@ const adminRoutes = require('./routes/admin');
 app.use('/api/auth', authRoutes);
 app.use('/admin', adminRoutes);
 
-// Test route
+// Route test
 app.get('/', (req, res) => {
   res.send('🎉 API Tchat Caribbean fonctionne !');
 });
 
-// Socket
+// 🔌 Socket.io
 io.on('connection', (socket) => {
   console.log('✅ Utilisateur connecté via Socket.io');
 
-socket.on('message', (msg) => {
-  const badgeMap = {
-    'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
-    'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
-    'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
-    'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
-    'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
-    'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
-  };
+  socket.on('message', (msg) => {
+    const badgeMap = {
+      'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
+      'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
+      'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
+      'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
+      'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
+      'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
+    };
 
-  const fullMessage = {
-    ...msg,
-    badge: badgeMap[msg.author] || null,
-  };
+    const fullMessage = {
+      ...msg,
+      badge: badgeMap[msg.author] || null,
+    };
 
-  io.emit('message', fullMessage);
-});
+    io.emit('message', fullMessage);
+  });
 
   socket.on('disconnect', () => {
     console.log('❌ Utilisateur déconnecté');
   });
 });
 
-// Lancer le serveur
+// 🚀 Lancer le serveur
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
