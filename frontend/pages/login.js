@@ -1,22 +1,52 @@
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+
 export default function LoginPage() {
+  const [pseudo, setPseudo] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pseudo, password }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert('Connexion réussie !');
+        router.push(`/chat?pseudo=${pseudo}`);
+      } else {
+        alert(data.message || 'Erreur de connexion');
+      }
+    } catch (err) {
+      alert('Erreur réseau');
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-      <form className="bg-gray-800 p-6 rounded shadow-md w-full max-w-sm">
-        <h1 className="text-xl font-bold mb-4 text-center">Connexion</h1>
+    <div className="h-screen flex items-center justify-center bg-gray-900 text-white">
+      <form onSubmit={handleLogin} className="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <h2 className="text-xl mb-4 font-bold">Connexion</h2>
         <input
           type="text"
           placeholder="Pseudo"
-          className="w-full p-2 mb-4 rounded bg-gray-700 text-white"
+          value={pseudo}
+          onChange={(e) => setPseudo(e.target.value)}
+          className="w-full mb-3 p-2 rounded bg-gray-700 text-white"
         />
         <input
           type="password"
           placeholder="Mot de passe"
-          className="w-full p-2 mb-4 rounded bg-gray-700 text-white"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full mb-4 p-2 rounded bg-gray-700 text-white"
         />
-        <button
-          type="submit"
-          className="w-full p-2 bg-blue-600 hover:bg-blue-500 rounded"
-        >
+        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 p-2 rounded">
           Se connecter
         </button>
       </form>
