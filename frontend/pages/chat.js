@@ -103,3 +103,4 @@ export default function ChatPage() {
     </div>
   );
 }
+const { pseudo, room = 'general' } = router.query;
