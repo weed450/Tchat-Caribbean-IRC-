@@ -1,3 +1,12 @@
+const mongoose = require('mongoose');
+require('dotenv').config();
+
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('✅ Connecté à MongoDB'))
+.catch((err) => console.error('❌ Erreur MongoDB :', err));
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
