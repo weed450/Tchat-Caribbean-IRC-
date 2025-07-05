@@ -14,7 +14,7 @@ const io = new Server(server, {
 
 app.use(express.json());
 
-// Connexion MongoDB (1 seule fois)
+// 🔌 Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
@@ -22,21 +22,38 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ Connecté à MongoDB'))
 .catch((err) => console.error('❌ Erreur MongoDB :', err));
 
-// Routes API
+// 📦 Routes API
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 app.use('/api/auth', authRoutes);
 app.use('/admin', adminRoutes);
 
-// Route test
+// ✅ Route test
 app.get('/', (req, res) => {
   res.send('🎉 API Tchat Caribbean fonctionne !');
 });
 
-// 🔌 Socket.io
+// 🌐 Gestion utilisateurs connectés
+let connectedUsers = new Set();
+
+// 🔌 Socket.io unifié
 io.on('connection', (socket) => {
   console.log('✅ Utilisateur connecté via Socket.io');
 
+  // Reçoit le pseudo et l’ajoute à la liste
+  socket.on('join', ({ pseudo }) => {
+    socket.pseudo = pseudo;
+    connectedUsers.add(pseudo);
+    io.emit('users', Array.from(connectedUsers));
+  });
+
+  socket.on('registerPseudo', (pseudo) => {
+    socket.pseudo = pseudo;
+    connectedUsers.add(pseudo);
+    io.emit('users', Array.from(connectedUsers));
+  });
+
+  // Message avec badge
   socket.on('message', (msg) => {
     const badgeMap = {
       'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
@@ -55,8 +72,14 @@ io.on('connection', (socket) => {
     io.emit('message', fullMessage);
   });
 
+  // Déconnexion
   socket.on('disconnect', () => {
     console.log('❌ Utilisateur déconnecté');
+
+    if (socket.pseudo) {
+      connectedUsers.delete(socket.pseudo);
+      io.emit('users', Array.from(connectedUsers));
+    }
   });
 });
 
@@ -64,28 +87,4 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
-});
-let connectedUsers = new Set();
-
-io.on('connection', (socket) => {
-  socket.on('join', ({ pseudo }) => {
-    connectedUsers.add(pseudo);
-    io.emit('users', Array.from(connectedUsers));
-  });
-
-  socket.on('disconnect', () => {
-    // Suppression intelligente
-    for (let user of connectedUsers) {
-      if (user === socket.pseudo) {
-        connectedUsers.delete(user);
-      }
-    }
-    io.emit('users', Array.from(connectedUsers));
-  });
-
-  socket.on('registerPseudo', (pseudo) => {
-    socket.pseudo = pseudo;
-    connectedUsers.add(pseudo);
-    io.emit('users', Array.from(connectedUsers));
-  });
 });
