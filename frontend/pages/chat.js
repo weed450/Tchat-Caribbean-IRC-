@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import BadgeLegend from '../components/BadgeLegend';
+import ConnectedUsers from '../components/ConnectedUsers';
 
 let socket;
 
@@ -11,11 +12,14 @@ export default function ChatPage() {
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const [socketInstance, setSocketInstance] = useState(null);
 
   useEffect(() => {
     if (!pseudo) return;
 
     socket = io('http://localhost:5000');
+    setSocketInstance(socket);
+
     socket.emit('join', { pseudo });
 
     socket.on('message', (msg) => {
@@ -64,14 +68,19 @@ export default function ChatPage() {
       </header>
 
       <main className="flex-1 p-4 overflow-y-auto space-y-2">
+        {/* ✅ Liste des utilisateurs connectés */}
+        {socketInstance && <ConnectedUsers socket={socketInstance} />}
+
+        {/* ✅ Légende des badges */}
         <BadgeLegend />
+
+        {/* ✅ Affichage des messages */}
         {messages.map((msg, idx) => (
           <div key={idx} className="bg-gray-800 p-2 rounded">
             <strong className="text-white">
               {msg.author}
-              {renderBadge(msg.badge)}
-              :
-            </strong>{" "}
+              {renderBadge(msg.badge)}:
+            </strong>{' '}
             {msg.content}
           </div>
         ))}
@@ -94,20 +103,3 @@ export default function ChatPage() {
     </div>
   );
 }
-useEffect(() => {
-  if (!pseudo) return;
-
-  socket = io('http://localhost:5000');
-  socket.emit('registerPseudo', pseudo); // 👈 nouveau
-
-  socket.on('users', (list) => {
-    console.log('Utilisateurs connectés :', list); // Plus tard, tu peux afficher
-  });
-
-  ...
-}, [pseudo]);
-import ConnectedUsers from '../components/ConnectedUsers';
-
-...
-
-<ConnectedUsers socket={socket} />
