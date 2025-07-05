@@ -20,16 +20,3 @@ export default function ConnectedUsers({ socket }) {
     </div>
   );
 }
-// frontend/components/ConnectedUsers.js
-export default function ConnectedUsers({ users }) {
-  return (
-    <div className="p-4 bg-gray-800 rounded mb-4">
-      <h2 className="text-sm font-bold mb-2">Utilisateurs connectés :</h2>
-      <ul className="text-sm">
-        {users.map((user, idx) => (
-          <li key={idx}>{user}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
