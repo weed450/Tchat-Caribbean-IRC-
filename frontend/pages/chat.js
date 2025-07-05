@@ -26,7 +26,13 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, msg]);
     });
 
-    return () => {
+    return () => {<div className="h-screen flex flex-col bg-gray-900 text-white">
+  <HeaderNav />
+  <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
+    {`Salon #${room} | Bienvenue ${pseudo}`}
+  </header>
+  {/* ... le reste du chat */}
+</div>
       socket.disconnect();
     };
   }, [pseudo]);
