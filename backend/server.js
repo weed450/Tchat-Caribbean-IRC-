@@ -1,5 +1,18 @@
+const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
+const { Server } = require('socket.io');
 require('dotenv').config();
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -7,55 +20,33 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log('✅ Connecté à MongoDB'))
 .catch((err) => console.error('❌ Erreur MongoDB :', err));
-import express from 'express';
-import http from 'http';
-import { Server } from 'socket.io';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// Routes API
+const authRoutes = require('./routes/auth');
+const adminRoutes = require('./routes/admin');
+app.use('/api/auth', authRoutes);
+app.use('/admin', adminRoutes);
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log("✅ MongoDB connecté"))
-  .catch((err) => console.error("❌ Erreur MongoDB :", err));
-
-app.use(express.json());
-
+// Test route
 app.get('/', (req, res) => {
-  res.send('🚀 Backend en ligne');
+  res.send('🎉 API Tchat Caribbean fonctionne !');
 });
 
+// Socket
 io.on('connection', (socket) => {
-  console.log('🟢 Nouveau client connecté');
-  socket.on('message', (data) => {
-    io.emit('message', data);
-  });
-  socket.on('disconnect', () => {
-    console.log('🔴 Client déconnecté');
-  });
-});
+  console.log('✅ Utilisateur connecté via Socket.io');
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Serveur sur http://localhost:${PORT}`);
-});
-const ModBot = require('./ModBot');
-
-io.on('connection', (socket) => {
   socket.on('message', (msg) => {
-    if (ModBot.handleMessage(msg, socket, io)) {
-      io.emit('message', msg); // envoie à tous si OK
-    }
+    io.emit('message', msg);
   });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Utilisateur déconnecté');
+  });
+});
+
+// Lancer le serveur
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
 });
