@@ -106,3 +106,8 @@ useEffect(() => {
 
   ...
 }, [pseudo]);
+import ConnectedUsers from '../components/ConnectedUsers';
+
+...
+
+<ConnectedUsers socket={socket} />
