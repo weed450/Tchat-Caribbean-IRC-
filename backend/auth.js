@@ -1,14 +1,12 @@
-// Auth routes
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const User = require('./User');
+const User = require('../models/User');
 
-// Clé secrète pour JWT (à mettre dans .env en prod)
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretkey';
 
-// Route d'inscription
+// Inscription
 router.post('/signup', async (req, res) => {
   const { pseudo, email, password } = req.body;
 
@@ -31,7 +29,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Route de connexion
+// Connexion
 router.post('/login', async (req, res) => {
   const { pseudo, password } = req.body;
 
@@ -46,53 +44,6 @@ router.post('/login', async (req, res) => {
     return res.status(200).json({ token, user });
   } catch (err) {
     return res.status(500).json({ message: 'Erreur serveur' });
-  }
-});
-
-module.exports = router;
-// middleware/isAdmin.js
-module.exports = function (req, res, next) {
-  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'owner')) {
-    return res.status(403).json({ error: 'Accès refusé' });
-  }
-  next();
-};
-const express = require('express');
-const router = express.Router();
-const User = require('../models/User');
-const isAdmin = require('../middleware/isAdmin');
-
-// POST /admin/badge
-router.post('/badge', isAdmin, async (req, res) => {
-  const { pseudo, color } = req.body;
-
-  const badgeConfig = {
-    gold: '@',
-    green: '@',
-    blue: '+',
-    pink: '✓',
-    red: '@',
-    black: '✓',
-  };
-
-  if (!badgeConfig[color]) {
-    return res.status(400).json({ error: 'Couleur invalide' });
-  }
-
-  try {
-    const user = await User.findOne({ pseudo });
-    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
-
-    user.badge = {
-      verified: true,
-      color,
-      symbol: badgeConfig[color],
-    };
-
-    await user.save();
-    res.json({ message: 'Badge assigné avec succès', user });
-  } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
