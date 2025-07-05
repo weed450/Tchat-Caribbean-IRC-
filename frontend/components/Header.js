@@ -1,16 +1,12 @@
+// components/Header.js
 import Link from 'next/link';
 
 const salons = ['general', 'ados', 'jeux', 'staff', 'admin'];
 
 export default function HeaderNav() {
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white">
-  <HeaderNav />
-  <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
-    {`Salon #${room} | Bienvenue ${pseudo}`}
-  </header>
-  {/* ... le reste du chat */}
-</div>
+    <nav className="bg-blue-900 text-white p-4 flex flex-wrap gap-4 justify-center text-sm sm:text-base">
+      <Link href="/">🏠 Accueil</Link>
       {salons.map((room) => (
         <Link
           key={room}
@@ -20,6 +16,7 @@ export default function HeaderNav() {
           #{room}
         </Link>
       ))}
+      <Link href="/join">➕ Rejoindre</Link>
       <Link href="/login">🔐 Connexion</Link>
     </nav>
   );
