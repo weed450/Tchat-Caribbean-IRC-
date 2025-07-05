@@ -41,3 +41,12 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur sur http://localhost:${PORT}`);
 });
+const ModBot = require('./ModBot');
+
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => {
+    if (ModBot.handleMessage(msg, socket, io)) {
+      io.emit('message', msg); // envoie à tous si OK
+    }
+  });
+});
