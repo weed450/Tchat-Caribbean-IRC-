@@ -45,26 +45,22 @@ app.get('/', (req, res) => {
 io.on('connection', (socket) => {
   console.log('✅ Utilisateur connecté via Socket.io');
 
- socket.on('message', async (msg) => {
-  const { author, content } = msg;
+socket.on('message', (msg) => {
+  const badgeMap = {
+    'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
+    'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
+    'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
+    'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
+    'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
+    'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
+  };
 
-  try {
-    const user = await User.findOne({ pseudo: author });
+  const fullMessage = {
+    ...msg,
+    badge: badgeMap[msg.author] || null,
+  };
 
-    const fullMessage = {
-      author,
-      content,
-      badge: user?.badge?.verified ? {
-        verified: true,
-        color: user.badge.color,
-        symbol: user.badge.symbol
-      } : null
-    };
-
-    io.emit('message', fullMessage);
-  } catch (err) {
-    console.error('Erreur lors de l’envoi du message avec badge :', err);
-  }
+  io.emit('message', fullMessage);
 });
 
   socket.on('disconnect', () => {
