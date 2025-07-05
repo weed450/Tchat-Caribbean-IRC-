@@ -65,3 +65,27 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
 });
+let connectedUsers = new Set();
+
+io.on('connection', (socket) => {
+  socket.on('join', ({ pseudo }) => {
+    connectedUsers.add(pseudo);
+    io.emit('users', Array.from(connectedUsers));
+  });
+
+  socket.on('disconnect', () => {
+    // Suppression intelligente
+    for (let user of connectedUsers) {
+      if (user === socket.pseudo) {
+        connectedUsers.delete(user);
+      }
+    }
+    io.emit('users', Array.from(connectedUsers));
+  });
+
+  socket.on('registerPseudo', (pseudo) => {
+    socket.pseudo = pseudo;
+    connectedUsers.add(pseudo);
+    io.emit('users', Array.from(connectedUsers));
+  });
+});
