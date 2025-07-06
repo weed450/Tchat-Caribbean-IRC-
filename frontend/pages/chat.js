@@ -3,45 +3,40 @@ import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import BadgeLegend from '../components/BadgeLegend';
 import ConnectedUsers from '../components/ConnectedUsers';
+import HeaderNav from '../components/Header'; // ✅ À ajouter
 
 let socket;
 
 export default function ChatPage() {
   const router = useRouter();
-  const { pseudo } = router.query;
+  const { pseudo, room = 'general' } = router.query;
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [socketInstance, setSocketInstance] = useState(null);
 
   useEffect(() => {
-    if (!pseudo) return;
+    if (!pseudo || !room) return;
 
     socket = io('http://localhost:5000');
     setSocketInstance(socket);
 
-    socket.emit('join', { pseudo });
+    socket.emit('join', { pseudo, room });
 
     socket.on('message', (msg) => {
       setMessages((prev) => [...prev, msg]);
     });
 
-    return () => {<div className="h-screen flex flex-col bg-gray-900 text-white">
-  <HeaderNav />
-  <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
-    {`Salon #${room} | Bienvenue ${pseudo}`}
-  </header>
-  {/* ... le reste du chat */}
-</div>
-      socket.disconnect();
+    return () => {
+      socket.disconnect(); // ✅ Pas de <div> ici
     };
-  }, [pseudo]);
+  }, [pseudo, room]);
 
   const handleSend = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    const messageData = { author: pseudo, content: input };
+    const messageData = { author: pseudo, content: input, room };
     socket.emit('message', messageData);
     setInput('');
   };
@@ -69,18 +64,15 @@ export default function ChatPage() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-900 text-white">
+      <HeaderNav />
       <header className="bg-blue-700 p-4 text-center text-2xl font-bold">
-        Bienvenue {pseudo}
+        {`Salon #${room} | Bienvenue ${pseudo}`}
       </header>
 
       <main className="flex-1 p-4 overflow-y-auto space-y-2">
-        {/* ✅ Liste des utilisateurs connectés */}
         {socketInstance && <ConnectedUsers socket={socketInstance} />}
-
-        {/* ✅ Légende des badges */}
         <BadgeLegend />
 
-        {/* ✅ Affichage des messages */}
         {messages.map((msg, idx) => (
           <div key={idx} className="bg-gray-800 p-2 rounded">
             <strong className="text-white">
@@ -109,4 +101,3 @@ export default function ChatPage() {
     </div>
   );
 }
-const { pseudo, room = 'general' } = router.query;
