@@ -89,3 +89,19 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
 });
+const ModBot = require('./ModBot');
+
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => {
+    if (!ModBot.handleMessage(msg.content, socket, io)) return;
+
+    // Suite logique : badge, envoi, sauvegarde
+    const badgeMap = {...};
+    const fullMessage = {
+      ...msg,
+      badge: badgeMap[msg.author] || null
+    };
+
+    io.to(msg.room).emit('message', fullMessage);
+  });
+});
