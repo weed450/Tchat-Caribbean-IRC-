@@ -39,3 +39,19 @@ function handleMessage(message, socket, io) {
   if (isOffensive(message)) {
     socket.emit('botWarning', '🚫 Message supprimé pour propos inappropriés.');
     return false;
+const ModBot = require('./ModBot');
+
+io.on('connection', (socket) => {
+  socket.on('message', (msg) => {
+    if (!ModBot.handleMessage(msg.content, socket, io)) return;
+
+    // Suite logique : badge, envoi, sauvegarde
+    const badgeMap = {...};
+    const fullMessage = {
+      ...msg,
+      badge: badgeMap[msg.author] || null
+    };
+
+    io.to(msg.room).emit('message', fullMessage);
+  });
+});
