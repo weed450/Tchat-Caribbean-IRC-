@@ -57,52 +57,23 @@ io.on('connection', (socket) => {
 
   // Message avec badge
   socket.on('message', (msg) => {
-    const badgeMap = {
-      'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
-      'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
-      'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
-      'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
-      'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
-      'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
-    };
+  // 👉 vérifie d'abord les commandes FunBot
+  if (FunBot.handleFunCommand(msg.content, socket)) return;
 
-    const fullMessage = {
-      ...msg,
-      badge: badgeMap[msg.author] || null,
-    };
+  // ensuite, le reste (ModBot, badges, etc.)
+  const badgeMap = {
+    'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
+    'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
+    'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
+    'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
+    'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
+    'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
+  };
 
-    io.emit('message', fullMessage);
-  });
+  const fullMessage = {
+    ...msg,
+    badge: badgeMap[msg.author] || null,
+  };
 
-  // Déconnexion
-  socket.on('disconnect', () => {
-    console.log('❌ Utilisateur déconnecté');
-
-    if (socket.pseudo) {
-      connectedUsers.delete(socket.pseudo);
-      io.emit('users', Array.from(connectedUsers));
-    }
-  });
-});
-
-// 🚀 Lancer le serveur
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
-});
-const ModBot = require('./ModBot');
-
-io.on('connection', (socket) => {
-  socket.on('message', (msg) => {
-    if (!ModBot.handleMessage(msg.content, socket, io)) return;
-
-    // Suite logique : badge, envoi, sauvegarde
-    const badgeMap = {...};
-    const fullMessage = {
-      ...msg,
-      badge: badgeMap[msg.author] || null
-    };
-
-    io.to(msg.room).emit('message', fullMessage);
-  });
+  io.emit('message', fullMessage);
 });
