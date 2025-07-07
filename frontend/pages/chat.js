@@ -1,5 +1,6 @@
+// pages/chat.js
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 
 import BadgeLegend from '../components/BadgeLegend';
@@ -16,13 +17,10 @@ export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [socketInstance, setSocketInstance] = useState(null);
 
-  const messagesEndRef = useRef(null);
-
   useEffect(() => {
     if (!pseudo || !room) return;
 
-    // Init socket avec variable d'environnement
-    socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000');
+    socket = io('http://localhost:5000');
     setSocketInstance(socket);
 
     socket.emit('join', { pseudo, room });
@@ -35,7 +33,6 @@ export default function ChatPage() {
       setMessages((prev) => [
         ...prev,
         {
-          id: `bot-${Date.now()}`, // id unique généré
           author: 'XPBot',
           content: msg,
           badge: {
@@ -47,23 +44,10 @@ export default function ChatPage() {
       ]);
     });
 
-    socket.on('connect_error', () => {
-      alert('Erreur de connexion au serveur de chat');
-    });
-
-    socket.on('disconnect', () => {
-      alert('Déconnecté du serveur de chat');
-    });
-
     return () => {
       socket.disconnect();
     };
   }, [pseudo, room]);
-
-  // Scroll automatique à chaque nouveau message
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -75,7 +59,7 @@ export default function ChatPage() {
   };
 
   const renderBadge = (badge) => {
-    if (!badge?.verified) return null;
+    if (!badge?.verified || !badge?.symbol) return null;
 
     const badgeColors = {
       gold: 'text-yellow-400',
@@ -89,7 +73,7 @@ export default function ChatPage() {
     const colorClass = badgeColors[badge.color] || 'text-white';
 
     return (
-      <span className={`ml-1 font-bold ${colorClass}`} aria-label="badge">
+      <span className={`ml-1 font-bold ${colorClass}`}>
         {badge.symbol}
       </span>
     );
@@ -107,15 +91,14 @@ export default function ChatPage() {
         <BadgeLegend />
 
         {messages.map((msg, idx) => (
-          <div key={msg.id || idx} className="bg-gray-800 p-2 rounded">
+          <div key={idx} className="bg-gray-800 p-2 rounded">
             <strong className="text-white">
               {msg.author}
-              {renderBadge(msg.badge)}:
+              {renderBadge(msg.badge)} :
             </strong>{' '}
             {msg.content}
           </div>
         ))}
-        <div ref={messagesEndRef} />
       </main>
 
       <form onSubmit={handleSend} className="p-4 flex bg-gray-800">
@@ -124,13 +107,10 @@ export default function ChatPage() {
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 rounded bg-gray-700 text-white"
           placeholder="Message"
-          aria-label="Message à envoyer"
-          autoComplete="off"
         />
         <button
           type="submit"
           className="ml-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
-          aria-label="Envoyer message"
         >
           Envoyer
         </button>
