@@ -8,6 +8,7 @@ require('dotenv').config();
 const FunBot = require('./FunBot');
 const XPBot = require('./XPBot');
 const ModBot = require('./ModBot');
+const GameBot = require('./GameBot');  // <-- Import GameBot
 const Message = require('./models/Message');
 
 const app = express();
@@ -66,6 +67,9 @@ io.on('connection', (socket) => {
 
       // Bot MODÉRATION
       if (!ModBot.handleMessage(content, socket, io)) return;
+
+      // Bot GAMES (ajout)
+      if (GameBot.handleGameCommand(content, socket, io)) return;
 
       // Bot XP
       XPBot.handleXP(author);
