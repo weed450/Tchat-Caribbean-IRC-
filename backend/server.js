@@ -12,6 +12,7 @@ const io = new Server(server, {
     origin: '*',
   },
 });
+const FunBot = require('./FunBot');
 
 app.use(express.json());
 
