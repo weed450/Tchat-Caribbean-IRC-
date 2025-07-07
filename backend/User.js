@@ -1,4 +1,4 @@
-// User model
+// backend/models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -23,13 +23,15 @@ const userSchema = new mongoose.Schema({
   },
   isVerified: {
     type: Boolean,
-    default: false, // Badge bleu ✅
+    default: false, // Pour badge bleu Twitter
   },
   badges: {
-    type: [String], // ['ancien', 'supporter', 'top1', ...]
+    type: [String], // ex: ['supporter', 'ancien', 'top1']
     default: [],
   },
-  country: String, // Pour la mini-carte interactive
+  country: {
+    type: String,
+  },
   xp: {
     type: Number,
     default: 0,
@@ -43,13 +45,9 @@ const userSchema = new mongoose.Schema({
     default: 0,
   },
   inventory: {
-    type: [String], // liste d'objets (id ou nom)
+    type: [String],
     default: [],
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+}, { timestamps: true }); // ✅ Ajoute createdAt & updatedAt
 
 module.exports = mongoose.model('User', userSchema);
