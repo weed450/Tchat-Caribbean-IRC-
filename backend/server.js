@@ -1,3 +1,4 @@
+const XPBot = require('./XPBot');
 const Message = require('./models/Message'); //
 const express = require('express');
 const http = require('http');
