@@ -139,3 +139,54 @@ export default function AdminPage() {
     </div>
   );
 }
+const [xp, setXp] = useState(0);
+const [gems, setGems] = useState(0);
+
+const handleStatsUpdate = async () => {
+  const res = await fetch('http://localhost:5000/admin/update-stats', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pseudo, xp: parseInt(xp), gems: parseInt(gems) }),
+  });
+  const data = await res.json();
+  setMessage(res.ok ? '✅ Stats mises à jour' : `❌ ${data.message}`);
+};
+<div className="mt-6 max-w-md space-y-2">
+  <h2 className="font-semibold">📈 Modifier XP / Gems</h2>
+  <input
+    type="number"
+    placeholder="+XP"
+    value={xp}
+    onChange={(e) => setXp(e.target.value)}
+    className="p-2 rounded bg-gray-700 w-full"
+  />
+  <input
+    type="number"
+    placeholder="+Gems"
+    value={gems}
+    onChange={(e) => setGems(e.target.value)}
+    className="p-2 rounded bg-gray-700 w-full"
+  />
+  <button onClick={handleStatsUpdate} className="w-full bg-yellow-600 hover:bg-yellow-500 p-2 rounded">
+    ✅ Mettre à jour
+  </button>
+</div>
+const [logs, setLogs] = useState([]);
+const fetchLogs = async () => {
+  const res = await fetch(`http://localhost:5000/admin/logs/${pseudo}`);
+  const data = await res.json();
+  if (res.ok) setLogs(data.logs);
+};
+<button onClick={fetchLogs} className="bg-gray-800 mt-4 p-2 rounded w-full">
+  📜 Voir derniers messages
+</button>
+
+{logs.length > 0 && (
+  <div className="bg-black mt-4 p-4 rounded max-h-60 overflow-y-auto text-sm">
+    {logs.map((log, i) => (
+      <p key={i}>
+        <strong>{log.timestamp?.slice(0, 19).replace('T', ' ')}</strong> : {log.content}
+      </p>
+    ))}
+  </div>
+)}
