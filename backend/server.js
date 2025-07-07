@@ -57,7 +57,8 @@ io.on('connection', (socket) => {
   });
 
   // Message avec badge
-  socket.on('message', (msg) => {
+  XPBot.handleXP(msg.author);
+socket.on('message', (msg) => {
   // 👉 vérifie d'abord les commandes FunBot
   if (FunBot.handleFunCommand(msg.content, socket)) return;
 
