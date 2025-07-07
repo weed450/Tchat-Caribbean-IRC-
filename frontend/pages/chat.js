@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+
 import BadgeLegend from '../components/BadgeLegend';
 import ConnectedUsers from '../components/ConnectedUsers';
-import HeaderNav from '../components/Header'; // ✅ À ajouter
+import HeaderNav from '../components/Header';
 
 let socket;
 
@@ -27,8 +28,23 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, msg]);
     });
 
+    socket.on('botMessage', (msg) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          author: 'XPBot',
+          content: msg,
+          badge: {
+            verified: true,
+            color: 'green',
+            symbol: '✓',
+          },
+        },
+      ]);
+    });
+
     return () => {
-      socket.disconnect(); // ✅ Pas de <div> ici
+      socket.disconnect();
     };
   }, [pseudo, room]);
 
@@ -101,6 +117,3 @@ export default function ChatPage() {
     </div>
   );
 }
-socket.on('botMessage', (msg) => {
-  setMessages((prev) => [...prev, { author: 'XPBot', content: msg, badge: { verified: true, color: 'green', symbol: '✓' } }]);
-});
