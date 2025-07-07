@@ -1,4 +1,3 @@
-// ModBot logic
 // backend/ModBot.js
 
 function isSpam(message) {
@@ -6,12 +5,13 @@ function isSpam(message) {
 }
 
 function isOffensive(message) {
-  const blacklist = ['merde', 'putain', 'con']; // à personnaliser
+  const blacklist = ['merde', 'putain', 'con']; // Ajoute ici d'autres mots
   return blacklist.some(word => message.toLowerCase().includes(word));
 }
 
 function isCapsLock(message) {
-  const ratio = message.replace(/[^A-Z]/g, '').length / message.length;
+  const letters = message.replace(/[^A-Za-z]/g, '');
+  const ratio = letters.length > 0 ? message.replace(/[^A-Z]/g, '').length / letters.length : 0;
   return message.length > 10 && ratio > 0.7;
 }
 
@@ -26,9 +26,10 @@ function handleCommand(message, socket) {
   }
 }
 
-function handleMessage(message, socket, io) {
+function handleMessage(message, socket) {
   if (message.startsWith('!')) {
-    return handleCommand(message, socket);
+    handleCommand(message, socket);
+    return false; // on ne diffuse pas
   }
 
   if (isSpam(message)) {
@@ -39,19 +40,16 @@ function handleMessage(message, socket, io) {
   if (isOffensive(message)) {
     socket.emit('botWarning', '🚫 Message supprimé pour propos inappropriés.');
     return false;
-const ModBot = require('./ModBot');
+  }
 
-io.on('connection', (socket) => {
-  socket.on('message', (msg) => {
-    if (!ModBot.handleMessage(msg.content, socket, io)) return;
+  if (isCapsLock(message)) {
+    socket.emit('botWarning', '⚠️ Merci d’éviter les MAJUSCULES abusives.');
+    return false;
+  }
 
-    // Suite logique : badge, envoi, sauvegarde
-    const badgeMap = {...};
-    const fullMessage = {
-      ...msg,
-      badge: badgeMap[msg.author] || null
-    };
+  return true;
+}
 
-    io.to(msg.room).emit('message', fullMessage);
-  });
-});
+module.exports = {
+  handleMessage,
+};
