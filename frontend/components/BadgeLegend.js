@@ -9,15 +9,16 @@ export default function BadgeLegend() {
   ];
 
   return (
-    <div className="mb-4 p-2 bg-gray-800 rounded">
-      <h2 className="text-sm font-bold mb-2">Légende des badges :</h2>
-      <ul className="text-sm space-y-1">
+    <div className="mb-4 p-4 bg-gray-800 rounded shadow-md" aria-label="Légende des badges">
+      <h2 className="text-sm font-bold mb-3 border-b border-gray-600 pb-1">Légende des badges :</h2>
+      <ul className="grid sm:grid-cols-2 gap-2 text-sm">
         {badges.map((badge, idx) => (
-          <li key={idx}>
-            <span className={`font-bold ${badge.color}`}>{badge.symbol}</span> - {badge.label}
+          <li key={idx} className="flex items-center space-x-2">
+            <span className={`font-bold ${badge.color}`}>{badge.symbol}</span>
+            <span>{badge.label}</span>
           </li>
         ))}
       </ul>
     </div>
   );
-    }
+}
