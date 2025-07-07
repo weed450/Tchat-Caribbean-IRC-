@@ -101,3 +101,6 @@ export default function ChatPage() {
     </div>
   );
 }
+socket.on('botMessage', (msg) => {
+  setMessages((prev) => [...prev, { author: 'XPBot', content: msg, badge: { verified: true, color: 'green', symbol: '✓' } }]);
+});
