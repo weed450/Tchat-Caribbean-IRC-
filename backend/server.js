@@ -1,49 +1,49 @@
-const XPBot = require('./XPBot');
-const Message = require('./models/Message'); //
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
+const FunBot = require('./FunBot');
+const XPBot = require('./XPBot');
+const ModBot = require('./ModBot');
+const Message = require('./models/Message');
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: '*',
-  },
+  cors: { origin: '*' },
 });
-const FunBot = require('./FunBot');
 
 app.use(express.json());
 
-// 🔌 Connexion MongoDB
+// Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 })
 .then(() => console.log('✅ Connecté à MongoDB'))
 .catch((err) => console.error('❌ Erreur MongoDB :', err));
 
-// 📦 Routes API
+// Routes API
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 app.use('/api/auth', authRoutes);
 app.use('/admin', adminRoutes);
 
-// ✅ Route test
+// Test route
 app.get('/', (req, res) => {
   res.send('🎉 API Tchat Caribbean fonctionne !');
 });
 
-// 🌐 Gestion utilisateurs connectés
+// Liste des utilisateurs connectés
 let connectedUsers = new Set();
 
-// 🔌 Socket.io unifié
+// Socket.io
 io.on('connection', (socket) => {
-  console.log('✅ Utilisateur connecté via Socket.io');
+  console.log('✅ Utilisateur connecté');
 
-  // Reçoit le pseudo et l’ajoute à la liste
+  // Pseudo tracking
   socket.on('join', ({ pseudo }) => {
     socket.pseudo = pseudo;
     connectedUsers.add(pseudo);
@@ -56,26 +56,63 @@ io.on('connection', (socket) => {
     io.emit('users', Array.from(connectedUsers));
   });
 
-  // Message avec badge
-  XPBot.handleXP(msg.author);
-socket.on('message', (msg) => {
-  // 👉 vérifie d'abord les commandes FunBot
-  if (FunBot.handleFunCommand(msg.content, socket)) return;
+  // Réception des messages
+  socket.on('message', async (msg) => {
+    const { author, content, room = 'general' } = msg;
 
-  // ensuite, le reste (ModBot, badges, etc.)
-  const badgeMap = {
-    'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
-    'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
-    'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
-    'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
-    'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
-    'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
-  };
+    // 🎯 Bot FUN (commandes humoristiques)
+    if (FunBot.handleFunCommand(content, socket)) return;
 
-  const fullMessage = {
-    ...msg,
-    badge: badgeMap[msg.author] || null,
-  };
+    // 🔒 Bot MODÉRATION
+    if (!ModBot.handleMessage(content, socket, io)) return;
 
-  io.emit('message', fullMessage);
+    // 🧠 XP Bot
+    XPBot.handleXP(author);
+
+    // ✅ Gestion des badges manuels
+    const badgeMap = {
+      'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
+      'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
+      'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
+      'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
+      'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
+      'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
+    };
+
+    const fullMessage = {
+      author,
+      content,
+      room,
+      badge: badgeMap[author] || null,
+    };
+
+    // Envoi à tous dans le salon
+    io.emit('message', fullMessage);
+
+    // Sauvegarde en base de données
+    try {
+      await Message.create({
+        pseudo: author,
+        content,
+        room,
+        badge: fullMessage.badge,
+      });
+    } catch (err) {
+      console.error('❌ Erreur enregistrement message :', err);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Utilisateur déconnecté');
+    if (socket.pseudo) {
+      connectedUsers.delete(socket.pseudo);
+      io.emit('users', Array.from(connectedUsers));
+    }
+  });
+});
+
+// Lancer le serveur
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
 });
