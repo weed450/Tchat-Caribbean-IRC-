@@ -1,16 +1,15 @@
-// Command logs model
-// backend/models/CommandLog.js
-
 const mongoose = require('mongoose');
 
 const commandLogSchema = new mongoose.Schema({
   user: {
     type: String,
     required: true,
+    trim: true,
   },
   command: {
     type: String,
     required: true,
+    trim: true,
   },
   parameters: {
     type: String,
@@ -21,6 +20,7 @@ const commandLogSchema = new mongoose.Schema({
   },
   room: {
     type: String,
+    trim: true,
   }
 });
 
