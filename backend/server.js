@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
@@ -12,7 +13,7 @@ const Message = require('./models/Message');
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' },
+  cors: { origin: '*' }, // En prod, limiter aux URL frontend
 });
 
 app.use(express.json());
@@ -36,61 +37,59 @@ app.get('/', (req, res) => {
   res.send('🎉 API Tchat Caribbean fonctionne !');
 });
 
-// Liste des utilisateurs connectés
-let connectedUsers = new Set();
+// Gestion des utilisateurs connectés par salon
+const connectedUsers = {}; // { roomName: Set(pseudos) }
 
-// Socket.io
 io.on('connection', (socket) => {
   console.log('✅ Utilisateur connecté');
 
-  // Pseudo tracking
-  socket.on('join', ({ pseudo }) => {
+  socket.on('join', ({ pseudo, room = 'general' }) => {
     socket.pseudo = pseudo;
-    connectedUsers.add(pseudo);
-    io.emit('users', Array.from(connectedUsers));
+    socket.room = room;
+    socket.join(room);
+
+    if (!connectedUsers[room]) connectedUsers[room] = new Set();
+    connectedUsers[room].add(pseudo);
+
+    // Envoyer liste utilisateurs à la room
+    io.to(room).emit('users', Array.from(connectedUsers[room]));
+    // Message bot bienvenue
+    io.to(room).emit('botMessage', `🎉 ${pseudo} a rejoint le salon #${room}`);
   });
 
-  socket.on('registerPseudo', (pseudo) => {
-    socket.pseudo = pseudo;
-    connectedUsers.add(pseudo);
-    io.emit('users', Array.from(connectedUsers));
-  });
-
-  // Réception des messages
   socket.on('message', async (msg) => {
-    const { author, content, room = 'general' } = msg;
-
-    // 🎯 Bot FUN (commandes humoristiques)
-    if (FunBot.handleFunCommand(content, socket)) return;
-
-    // 🔒 Bot MODÉRATION
-    if (!ModBot.handleMessage(content, socket, io)) return;
-
-    // 🧠 XP Bot
-    XPBot.handleXP(author);
-
-    // ✅ Gestion des badges manuels
-    const badgeMap = {
-      'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
-      'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
-      'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
-      'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
-      'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
-      'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
-    };
-
-    const fullMessage = {
-      author,
-      content,
-      room,
-      badge: badgeMap[author] || null,
-    };
-
-    // Envoi à tous dans le salon
-    io.emit('message', fullMessage);
-
-    // Sauvegarde en base de données
     try {
+      const { author, content, room = 'general' } = msg;
+
+      // Bot FUN
+      if (FunBot.handleFunCommand(content, socket)) return;
+
+      // Bot MODÉRATION
+      if (!ModBot.handleMessage(content, socket, io)) return;
+
+      // Bot XP
+      XPBot.handleXP(author);
+
+      // Badges manuels (à adapter)
+      const badgeMap = {
+        'Maiä':         { verified: true, color: 'gold',  symbol: '@' },
+        'AdminJoe':     { verified: true, color: 'green', symbol: '@' },
+        'VérifiéMax':   { verified: true, color: 'blue',  symbol: '+' },
+        'SupportGirl':  { verified: true, color: 'pink',  symbol: '✓' },
+        'ModLisa':      { verified: true, color: 'red',   symbol: '@' },
+        'BotCaribbean': { verified: true, color: 'black', symbol: '✓' },
+      };
+
+      const fullMessage = {
+        author,
+        content,
+        room,
+        badge: badgeMap[author] || null,
+      };
+
+      io.to(room).emit('message', fullMessage);
+
+      // Sauvegarde en base
       await Message.create({
         pseudo: author,
         content,
@@ -98,20 +97,24 @@ io.on('connection', (socket) => {
         badge: fullMessage.badge,
       });
     } catch (err) {
-      console.error('❌ Erreur enregistrement message :', err);
+      console.error('❌ Erreur message socket:', err);
     }
   });
 
   socket.on('disconnect', () => {
-    console.log('❌ Utilisateur déconnecté');
-    if (socket.pseudo) {
-      connectedUsers.delete(socket.pseudo);
-      io.emit('users', Array.from(connectedUsers));
+    const { pseudo, room } = socket;
+    if (room && connectedUsers[room]) {
+      connectedUsers[room].delete(pseudo);
+
+      // Mise à jour liste utilisateurs dans la room
+      io.to(room).emit('users', Array.from(connectedUsers[room]));
+      io.to(room).emit('botMessage', `🚪 ${pseudo} a quitté le salon`);
     }
+    console.log('❌ Utilisateur déconnecté');
   });
 });
 
-// Lancer le serveur
+// Lancer serveur
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur le port ${PORT}`);
