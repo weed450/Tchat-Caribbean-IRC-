@@ -1,6 +1,6 @@
+
 {
   "name": "chat-irc-backend",
-  "type": "module",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -13,5 +13,3 @@
     "socket.io": "^4.7.2"
   }
 }
-const authRoutes = require('./auth');
-app.use('/api/auth', authRoutes);
