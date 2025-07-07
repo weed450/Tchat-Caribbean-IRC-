@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     lowercase: true,
+    trim: true,
   },
   password: {
     type: String,
@@ -23,14 +24,15 @@ const userSchema = new mongoose.Schema({
   },
   isVerified: {
     type: Boolean,
-    default: false, // Pour badge bleu Twitter
+    default: false,
   },
   badges: {
-    type: [String], // ex: ['supporter', 'ancien', 'top1']
+    type: [String],
     default: [],
   },
   country: {
     type: String,
+    default: '',
   },
   xp: {
     type: Number,
@@ -48,6 +50,6 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-}, { timestamps: true }); // ✅ Ajoute createdAt & updatedAt
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
