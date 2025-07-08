@@ -4,9 +4,3 @@ services:
     env: docker
     plan: free
     dockerfilePath: backend/Dockerfile
-    envVars:
-      - key: MONGO_URI
-        value: mongodb+srv://Admini:tj4-K79Zt.fFrg-@cluster0.oxdfm7b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - key: PORT
-        value: 3000
-    autoDeploy: true
